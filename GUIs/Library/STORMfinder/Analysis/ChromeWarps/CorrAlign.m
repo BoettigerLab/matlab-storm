@@ -59,8 +59,11 @@ yshift = (cy-Hc2);
 if parameters.showplot
    subplot(1,3,1); Ncolor(cat(3,Im1,Im2));
    Im2 = TranslateImage(Im2,xshift,yshift);
-   subplot(1,3,2); Ncolor(cat(3,Im1,Im2)); freezeColors;
+   subplot(1,3,2); Ncolor(cat(3,Im1,Im2)); 
+   title(['xshift=',num2str(xshift),' yshift=',num2str(yshift)]);
+   freezeColors;
    subplot(1,3,3); imagesc(corrMmini); colormap(jet(256));
+   title(['peak=',num2str(parameters.corrPeak/1E9)]);
 end
 
 xshift = xshift/parameters.upsample;

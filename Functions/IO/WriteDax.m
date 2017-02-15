@@ -7,7 +7,7 @@ global scratchPath
 
 defaults = cell(0,3);
 defaults(end+1,:) = {'folder', 'string', scratchPath}; % 
-defaults(end+1,:) = {'daxName', 'string', 'temp'}; % 
+defaults(end+1,:) = {'daxName', 'string', 'temp'}; % (leave off .dax)
 defaults(end+1,:) = {'verbose', 'boolean', true}; % 
 parameters = ParseVariableArguments(varargin, defaults, mfilename);
 
@@ -15,25 +15,25 @@ parameters = ParseVariableArguments(varargin, defaults, mfilename);
 
                  infoFile.localName= [parameters.daxName,'.inf'];
                  infoFile.localPath= parameters.folder;
-                  infoFile.uniqueID= 7.3616e+05;
+                  infoFile.uniqueID= 0; % 7.3616e+05;
                       infoFile.file= '';
               infoFile.machine_name= 'matlab-storm';
            infoFile.parameters_file= '';
              infoFile.shutters_file= '';
                   infoFile.CCD_mode= 'frame-transfer';
                  infoFile.data_type= '16 bit integers (binary, big endian)';
-          infoFile.frame_dimensions= [yDim xDim];
+          infoFile.frame_dimensions= [xDim,yDim]; %[yDim xDim];
                    infoFile.binning= [1 1];
                 infoFile.frame_size= xDim*yDim;
-    infoFile.horizontal_shift_speed= 10;
-      infoFile.vertical_shift_speed= 3.3000;
-                infoFile.EMCCD_Gain= 30;
-               infoFile.Preamp_Gain= 5.1000;
-             infoFile.Exposure_Time= 0.5000;
-         infoFile.Frames_Per_Second= 1.9930;
-        infoFile.camera_temperature= -68;
+    infoFile.horizontal_shift_speed= 0;
+      infoFile.vertical_shift_speed= 0;
+                infoFile.EMCCD_Gain= 0;
+               infoFile.Preamp_Gain= 0;
+             infoFile.Exposure_Time= 0;
+         infoFile.Frames_Per_Second= 0;
+        infoFile.camera_temperature= 0;
           infoFile.number_of_frames= nFrames;
-               infoFile.camera_head= 'DU897_BV';
+               infoFile.camera_head= 'matlab';
                     infoFile.hstart= 1;
                       infoFile.hend= xDim;
                     infoFile.vstart= 1;

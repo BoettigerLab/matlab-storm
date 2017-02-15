@@ -159,8 +159,8 @@ global  SF insightExe daoSTORMexe scratchPath
         WriteInfoFiles(InfoFile_temp,'verbose',false);
         % call insight 
         ccall = ['!', insight,' "',daxtemp,'" ',...
-            ' "',SF{handles.gui_number}.inifile,'" ',...
-            ' "',SF{handles.gui_number}.inifile,'" '];
+            ' "',SF{handles.gui_number}.inifile,'" ']; %   ,...
+            % ' "',SF{handles.gui_number}.inifile,'" '];  % required for but gives a Frame Out Of Range error... 
         disp(ccall); 
         eval(ccall); 
         binfile = regexprep([scratchPath,'mov_temp.dax'],'\.dax','_list.bin');
@@ -340,7 +340,7 @@ global SF
     fend = ftell(fid);
     fclose(fid);
     TFrames = fend/(16/8)/(SF{handles.gui_number}.impars.h*SF{handles.gui_number}.impars.w);  % total number of frames
-    set(handles.FrameSlider,'Min',0);
+    set(handles.FrameSlider,'Min',1);
     set(handles.FrameSlider,'Max',TFrames);
     set(handles.FrameSlider,'Value',SF{handles.gui_number}.impars.cframe); 
     set(handles.FrameSlider,'SliderStep',[1/TFrames,50/TFrames]);

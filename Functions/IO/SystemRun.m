@@ -76,13 +76,18 @@ end
 %-------------------------------------------------------------------------
 % Main Code 
 %-------------------------------------------------------------------------
-startInfo = System.Diagnostics.ProcessStartInfo('cmd.exe', sprintf('/c "%s"', system_command));
-if Hidden
-    startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;  %// if you want it invisible
-end
-proc = System.Diagnostics.Process.Start(startInfo);
-if isempty(proc)
-    error('Failed to launch process');
+if ispc
+    startInfo = System.Diagnostics.ProcessStartInfo('cmd.exe', sprintf('/c "%s"', system_command));
+    if Hidden
+        startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;  %// if you want it invisible
+    end
+    proc = System.Diagnostics.Process.Start(startInfo);
+    if isempty(proc)
+        error('Failed to launch process');
+    end
+else
+    warning('SystemRun is written for windows, using system command instead');
+    system(system_command);
 end
 
 
