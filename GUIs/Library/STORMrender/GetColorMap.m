@@ -69,7 +69,7 @@ catch
         clrmap = flipud([redToYellow;flipud(whiteToYellow)]);
 
       case 'blackCyanOrange'
-        nPts = pts;
+        nPts = round(pts/2);
         blackToCyan = zeros(nPts,3);
         CyanToOrange  = zeros(nPts,3);
         for n=1:nPts;
@@ -77,8 +77,16 @@ catch
             CyanToOrange(n,:) = [ n/nPts, (nPts-(n/2))/nPts, (nPts-n)/nPts];
         end
         clrmap = ([blackToCyan; (CyanToOrange)]);
-          
         
+      case 'RedWhiteBlue'
+          nPts = round(pts/2);
+          redToWhite = zeros(nPts,3);
+          whiteToBlue = zeros(nPts,3);
+          for n=1:nPts
+              redToWhite(n,:) = [1,n/nPts,n/nPts];
+              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
+          end
+          clrmap = [redToWhite; whiteToBlue];
         otherwise
         if verbose
             disp(['colormap ',clr,' not recognized']);
