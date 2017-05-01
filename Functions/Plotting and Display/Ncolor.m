@@ -28,7 +28,7 @@ end
 %% Main Function
 % -------------------------------------------------------------------------
 [vDim,hDim,numColors] = size(imIn);
-clrmap = GetColorMap(parameters.colormap); 
+clrmap = GetColorMap(parameters.colormap,numColors); 
 
 if size(clrmap,1) < numColors
     error(['colormap must be a colormap name or a colormap matrix of length at least ',num2str(numColors)]);
