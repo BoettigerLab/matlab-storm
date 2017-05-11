@@ -111,17 +111,34 @@ catch
         end
         clrmap = redToWhite;   
         
+    case 'redToWhiteSat'
+        nPts = pts;
+        redToWhite = zeros(nPts,3);
+        for n=1:nPts
+          redToWhite(n,:) = [1,((n-1)/(nPts-1)),((n-1)/(nPts-1))];
+        end
+        redToWhite = cat(1,[.8 .8 .8],redToWhite,[.9 .9 .9]);
+        clrmap = redToWhite;   
+        
     case 'redToWhite2'
         nPts = pts;
         redToWhite = zeros(nPts,3);
         for n=1:nPts
           redToWhite(n,:) = [1,((n-1)/(nPts-1))^.5,((n-1)/(nPts-1))^.5];
         end
-        clrmap = redToWhite;      
+        clrmap = redToWhite; 
+        
+    case 'whiteToRed'
+        nPts = pts;
+        whiteToRead = zeros(nPts,3);
+        for n=1:nPts
+          whiteToRead(n,:) = [1,((nPts-n)/(nPts-1)),((nPts-n)/(nPts-1))];
+        end
+        clrmap = whiteToRead;  
         
     otherwise
         if parameters.verbose
-            warning(['colormap ',clr,' not recognized']);
+            warning(['colormap ',clrmapName,' not recognized']);
         end
   end
 end
