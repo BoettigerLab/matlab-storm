@@ -1,4 +1,4 @@
-function box_coords = PositionToBox(position,mosaicPars,varargin)
+function coords = PositionMicronsToPixels(position,mosaicPars,varargin)
 % 
 % Inputs
 % takes input postions, an Nx2 array of x,y stage positions and mosaicPars,
@@ -13,11 +13,10 @@ defaults = cell(0,3);
 defaults(end+1,:) = {'frameSize','positive',1024};
 pars = ParseVariableArguments(varargin,defaults,mfilename);
 
-numPts = size(position,1); 
+cx = mosaicPars.mx*position(:,1)-mosaicPars.xmin-pars.frameSize;
+cy = mosaicPars.my*position(:,2)-mosaicPars.ymin-pars.frameSize;
+coords = [cx,cy];
 
-box_cx = mosaicPars.mx*position(:,1)-mosaicPars.xmin-pars.frameSize;
-box_cy = mosaicPars.my*position(:,2)-mosaicPars.ymin-pars.frameSize;
-box_coords = [box_cx,box_cy,pars.frameSize*ones(numPts,1),pars.frameSize*ones(numPts,1)];
 
 % if showbox
 % hold on;

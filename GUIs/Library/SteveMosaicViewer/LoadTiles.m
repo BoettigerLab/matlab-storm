@@ -17,7 +17,7 @@ defaults(end+1,:) = {'showbox', 'boolean', false};  % plot box over seed positio
 defaults(end+1,:) = {'shrk', 'positive', 1}; 
 defaults(end+1,:) = {'position', 'array', [0,0]};  % seed position
 defaults(end+1,:) = {'N', 'positive', 2000};  % max number of tiles around seed position 
-
+defaults(end+1,:) = {'frameSize', 'positive', 1024}; 
 % -------------------------------------------------------------------------
 % Parse variable input
 % -------------------------------------------------------------------------
@@ -93,7 +93,7 @@ end
     
 %%
 N = min(N,M); 
-[frames,~] = knnsearch([xu,yu],position,'k',N);
+[frames,~] = knnsearch([xu,yu],position(1,:),'k',N);
 
 % get dimensions of grid to plot:
 if showall
@@ -102,10 +102,10 @@ else
     magmin = 1;
 end
     
-xmin = min(xp(frames)-magmin*256);
-xmax = max(xp(frames)+magmin*256);
-ymin = min(yp(frames)-magmin*256);
-ymax = max(yp(frames)+magmin*256);
+xmin = min(xp(frames)-magmin*parameters.frameSize);
+xmax = max(xp(frames)+magmin*parameters.frameSize);
+ymin = min(yp(frames)-magmin*parameters.frameSize);
+ymax = max(yp(frames)+magmin*parameters.frameSize);
 
 xs = round(xmax - xmin); 
 ys = round(ymax - ymin);
@@ -169,7 +169,7 @@ for k = 1:length(frames);
 end
 
 %--------- show plot
-figure(1); clf; 
+clf;
 imOut = imadjust(mosaicImage,stretchlim(mosaicImage,0.001));
 imagesc(imOut); 
 colormap(gray(2^8));
@@ -179,23 +179,28 @@ steveMosaic = imOut;
 disp('saved mosaic image in global variable steveMosaic'); 
 
 %-------------------- compute pixel to um conversion    
-%figure(2); plot(xu(mag==1),xp(mag==1),'k.');
-mx = ( max(xp(mag==1)) - min(xp(mag==1)) )/( max(xu(mag==1)) - min(xu(mag==1)) ) ;
-my = ( max(yp(mag==1)) - min(yp(mag==1)) )/( max(yu(mag==1)) - min(yu(mag==1)) ) ;
+% %figure(2); plot(xu(mag==1),xp(mag==1),'k.');
+% mx = ( max(xp(mag==1)) - min(xp(mag==1)) )/( max(xu(mag==1)) - min(xu(mag==1)) ) ;
+% my = ( max(yp(mag==1)) - min(yp(mag==1)) )/( max(yu(mag==1)) - min(yu(mag==1)) ) ;
+
+mx = ( max(xp) - min(xp) )/( max(xu) - min(xu) ) ;
+my = ( max(yp) - min(yp) )/( max(yu) - min(yu) ) ;
 
 mosaicPars.mx = mx; 
 mosaicPars.my = my;
 mosaicPars.xmin = xmin;
 mosaicPars.ymin = ymin;
+mosaicPars.frameSize = parameters.frameSize/mag(i);
 
-box_coords = PositionToBox(position,mosaicPars);
 
-if showbox && nargout==0;
-hold on;
-  rectangle('Position',box_coords,'EdgeColor','w');
-  lin = findobj(gca,'Type','patch');
-  set(lin,'color','w','linewidth',3);
-  hold off;
+box_coords = PositionToBox(position,mosaicPars,'frameSize',parameters.frameSize*1/mag(i));
+numPos = size(box_coords,1);
+
+if showbox
+    hold on;
+    for n=1:numPos
+      rectangle('Position',box_coords(n,:),'EdgeColor','c');
+    end
 end
 
 

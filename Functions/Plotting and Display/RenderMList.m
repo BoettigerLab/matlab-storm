@@ -115,10 +115,15 @@ if parameters.gaussianWidth ~= 0
     % Determine sigma and filter matrix size
     % ---------------------------------------------------------------------
     sigma = parameters.gaussianWidth*parameters.imageScale;
-    matSize = max(parameters.matSizeScale, ...
-        2*round(parameters.matSizeScale*sigma/2) + 1); % Always odd
-    filterMat = fspecial('gaussian', matSize, sigma);
-    renderedImage = imfilter(renderedImage, filterMat);
+    
+    if datetime(version('-date')) > datetime('01-Jan-2015')
+        renderedImage = imgaussfilt(renderedImage,sigma);
+    else
+        matSize = max(parameters.matSizeScale, ...
+            2*round(parameters.matSizeScale*sigma/2) + 1); % Always odd
+        filterMat = fspecial('gaussian', matSize, sigma);
+        renderedImage = imfilter(renderedImage, filterMat);
+    end
 end
 
 if nargout == 0

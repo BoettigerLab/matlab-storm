@@ -1,10 +1,15 @@
 function structOut = AddStructures(struct1,struct2,varargin)
-% Takes a structure which contains N fields all of a common length.  This
-% fields may be cell arrays or numeric arrays.  Also takes a index.
-% Returns a structure with the same N fields but each field contains only
-% the values in idx.  
-%  structOut = IndexStructure(structIn,idx,'celldata',false,'verbose',true)
-
+% Takes twp structures which contain the same N fields all of a common 
+% length.  
+% Returns a single structure which has N fields. Each field contains all of
+% the entries of structure 1, then all the entries of structure 2
+% 
+%% Example
+% mlist1.x = rand(10,1); mlist1.y = rand(10,1);
+% mlist2.x = rand(10,1); mlist2.y = rand(10,1);
+% mlist = AddStructures(mlist1,mlist2)
+% mlist.x is 20x1 and mlist.y is 20x1 combining the values of mlist 1 and
+% mlist 2. 
 
 
 % -------------------------------------------------------------------------

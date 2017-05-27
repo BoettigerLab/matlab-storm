@@ -41,6 +41,11 @@ parameters = ParseVariableArguments(varargin, defaults, mfilename);
 inputString = A;
 [indexes, uniqueInputValues] = grp2idx(inputString);
 numOccurrences = histc(indexes,1:numel(uniqueInputValues));
+% if parameters.stable
+%     sortedValues = unique(inputString,'stable'); 
+% end
+% strcmp(uniqueInputValues,sortedValues)
+
 if ~iscell(A)
     uniqueInputValues = str2double(uniqueInputValues)'; % make double, match old row convention 
     numOccurrences = numOccurrences'; % matching old code
