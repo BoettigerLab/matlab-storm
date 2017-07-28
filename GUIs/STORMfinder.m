@@ -28,7 +28,7 @@ function varargout = STORMfinder(varargin)
 
 % Edit the above text to modify the response to help STORMfinder
 
-% Last Modified by GUIDE v2.5 29-Dec-2013 17:25:00
+% Last Modified by GUIDE v2.5 20-Apr-2017 07:09:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -80,6 +80,7 @@ STORMfinderDefaults(handles);
 
 % Choose default command line output for STORMfinder
 handles.output = hObject;
+DefaultParmeters(hObject,eventdata,handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -100,6 +101,24 @@ axes(handles.axes1); axis off;
 % uiwait(handles.figure1);
 
 
+function DefaultParmeters(hObject,eventdata,handles)
+global SF
+
+defaults = cell(0,3);
+defaults(end+1,:) = {'cameraBackground','float',1000};
+defaults(end+1,:) = {'minPeakHeight','float',1000};
+defaults(end+1,:) = {'peakBlur','float',.5};
+defaults(end+1,:) =  {'initSigmaXY', 'float', 1.5};
+defaults(end+1,:) =  {'maxSigma', 'float', 3}; 
+defaults(end+1,:) =  {'minSigma', 'float', .3};
+defaults(end+1,:) =  {'peakBound', 'positive' 2};
+defaults(end+1,:) = {'FiniteDifferenceType',{'central','forward'},'central'};
+defaults(end+1,:) = {'MaxFunctionEvaluations','positive',5E3};
+defaults(end+1,:) = {'OptimalityTolerance','positive',1E-8};
+pars = ParseVariableArguments([], defaults, mfilename);
+
+SF{handles.gui_number}(:).parsFit = pars; 
+
 % --- Outputs from this function are returned to the command line.
 function varargout = STORMfinder_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -116,7 +135,7 @@ function FindDots_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to FindDots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global  SF insightExe daoSTORMexe scratchPath
+global  SF insightExe daoSTORMexe scratchPath daxfile
 
     % only find spots in current field of view
     UpdateFitPars(handles);
@@ -125,48 +144,14 @@ global  SF insightExe daoSTORMexe scratchPath
 %     k = strfind(daxfile,filesep);
 %     fpath = daxfile(1:k(end));
   %  daxroot = regexprep(daxfile(k(end)+1:end),'.dax','');
-    
-    if FitMethod == 1 % InsightM  
-        if isempty(insightExe)
-            error(['insightExe not found.  ',...
-                'Please set the global variable insightExe ',...
-                'to specify the location of insightM.exe in the ',...
-                'Insight3 folder on your computer.']);
-        end
-        insight = insightExe; 
+    if FitMethod == 1 % 2D Gaussian
+         dax = ReadDax(daxfile);
+         frame = SF{handles.gui_number}.impars.cframe;
+         im = dax(1:200,1:200,frame); 
+         gauss = Fit2Dspot(im, 'parameters', SF{handles.gui_number}.parsFit);
+         
         
-        % InsightM /.ini files don't have a max frames parameter, so
-        % instead we write a new dax menufile that has only 1 frame.  
-        
-        % if no inifile has been loaded, use default values 
-        if isempty(SF{handles.gui_number}.inifile)
-            ReadParameterFile(FitMethod,handles); % make default file the inifile
-        end
-        
-       % write temp daxfile
-        mov_temp = 'mov_temp.dax';
-        daxtemp = [scratchPath, mov_temp];
-        ftemp = fopen(daxtemp,'w+');
-        fwrite(ftemp,SF{handles.gui_number}.impars.Im(:),'*uint16',0,'b');
-        fclose(ftemp);
-
-        
-        % write temp inf file 
-        InfoFile_temp = SF{handles.gui_number}.impars.infofile;
-        InfoFile_temp.number_of_frames = 1;
-        InfoFile_temp.localName = 'mov_temp.inf';
-        InfoFile_temp.localPath = scratchPath;
-        WriteInfoFiles(InfoFile_temp,'verbose',false);
-        % call insight 
-        ccall = ['!', insight,' "',daxtemp,'" ',...
-            ' "',SF{handles.gui_number}.inifile,'" ']; %   ,...
-            % ' "',SF{handles.gui_number}.inifile,'" '];  % required for but gives a Frame Out Of Range error... 
-        disp(ccall); 
-        eval(ccall); 
-        binfile = regexprep([scratchPath,'mov_temp.dax'],'\.dax','_list.bin');
-            
-        
-	elseif FitMethod == 2    
+	elseif FitMethod == 2  %DaoStorm  
         % load parameter files if missing
         if isempty(SF{handles.gui_number}.xmlfile)
             ReadParameterFile(FitMethod,handles) % make default file the 'xmlfile'
@@ -204,15 +189,49 @@ global  SF insightExe daoSTORMexe scratchPath
             '" "',binfile,'" "',xmlfile_temp,'"']);
         
             
-	elseif FitMethod == 3
-        TempPars = SF{handles.gui_number}.FitPars;
-        TempPars.startFrame = mat2str(SF{handles.gui_number}.impars.cframe);
-        TempPars.endFrame = mat2str(SF{handles.gui_number}.impars.cframe+1); 
-        SF{handles.gui_number}.mlist = ...
-            GPUmultifitDax(SF{handles.gui_number}.daxfile,TempPars);           
+        
+	elseif FitMethod == 3% InsightM  
+        if isempty(insightExe)
+            error(['insightExe not found.  ',...
+                'Please set the global variable insightExe ',...
+                'to specify the location of insightM.exe in the ',...
+                'Insight3 folder on your computer.']);
+        end
+        insight = insightExe; 
+        
+        % InsightM /.ini files don't have a max frames parameter, so
+        % instead we write a new dax menufile that has only 1 frame.  
+        
+        % if no inifile has been loaded, use default values 
+        if isempty(SF{handles.gui_number}.inifile)
+            ReadParameterFile(FitMethod,handles); % make default file the inifile
+        end
+        
+       % write temp daxfile
+        mov_temp = 'mov_temp.dax';
+        daxtemp = [scratchPath, mov_temp];
+        ftemp = fopen(daxtemp,'w+');
+        fwrite(ftemp,SF{handles.gui_number}.impars.Im(:),'*uint16',0,'b');
+        fclose(ftemp);
+
+        
+        % write temp inf file 
+        InfoFile_temp = SF{handles.gui_number}.impars.infofile;
+        InfoFile_temp.number_of_frames = 1;
+        InfoFile_temp.localName = 'mov_temp.inf';
+        InfoFile_temp.localPath = scratchPath;
+        WriteInfoFiles(InfoFile_temp,'verbose',false);
+        % call insight 
+        ccall = ['!', insight,' "',daxtemp,'" ',...
+            ' "',SF{handles.gui_number}.inifile,'" ']; %   ,...
+            % ' "',SF{handles.gui_number}.inifile,'" '];  % required for but gives a Frame Out Of Range error... 
+        disp(ccall); 
+        eval(ccall); 
+        binfile = regexprep([scratchPath,'mov_temp.dax'],'\.dax','_list.bin');
+                 
     end 
     
-    if FitMethod~=3
+    if FitMethod~=1
         try
         SF{handles.gui_number}.mlist = ...
             ReadMasterMoleculeList(binfile,'verbose',false);
@@ -229,9 +248,13 @@ imagesc(SF{handles.gui_number}.impars.Im(:,:,1)');
 caxis([SF{handles.gui_number}.impars.cmin,...
     SF{handles.gui_number}.impars.cmax]); colormap gray;
 set(handles.title1,'String',SF{handles.gui_number}.daxfile); % ,'interpreter','none'); 
-hold on;  
-plot(SF{handles.gui_number}.mlist.x(:),...
-    SF{handles.gui_number}.mlist.y(:),'yo','MarkerSize',20);
+hold on; 
+if FitMethod~=1
+    plot(SF{handles.gui_number}.mlist.x(:),...
+        SF{handles.gui_number}.mlist.y(:),'yo','MarkerSize',20);
+else
+    plot(gauss.fits_x, gauss.fits_y, 'yo', 'MarkerSize', 20);
+end
 axis off;
 % rectangle(mlist.x(:),mlist.y(:),mlist.w(:),mlist.w(:));
 
@@ -401,9 +424,11 @@ function [FitPars,parameters] = ReadParameterFile(FitMethod,handles)
 % if no inifile or xmlfile has been loaded yet, load default files.  
 % 
     global SF defaultIniFile defaultXmlFile defaultGPUmFile
-      % clear fitPars  
-    if FitMethod == 1
-        if isempty(SF{handles.gui_number}.inifile)
+      % clear fitPars
+     
+    if FitMethod == 1 
+        
+       if isempty(SF{handles.gui_number}.inifile)
             SF{handles.gui_number}.inifile = defaultIniFile; % '..\Parameters\647zcal_storm2.ini';
              disp('no inifile found to load, using default file ');
              disp(SF{handles.gui_number}.inifile); 
@@ -451,6 +476,16 @@ function [FitPars,parameters] = ReadParameterFile(FitMethod,handles)
                     'useROI','xmin','xmax','ymin','ymax'};
 
                 parsfile = SF{handles.gui_number}.inifile;
+        % Don't need to do anything, not reading a file. 
+                
+       % if isempty(SF{handles.gui_number}.gpufile)
+       %     disp('no gpu parameter file found, loading defaults');
+       %     SF{handles.gui_number}.gpufile = defaultGPUmFile;
+       % end
+       % load(SF{handles.gui_number}.gpufile);
+       % parsfile = SF{handles.gui_number}.gpufile;
+       % FitPars = GPUmultiPars;
+       % parameters = ''; 
 
     elseif FitMethod == 2
         if isempty(SF{handles.gui_number}.xmlfile)
@@ -508,15 +543,56 @@ function [FitPars,parameters] = ReadParameterFile(FitMethod,handles)
           FitPars = cell2struct(target_values,Pfields,2);  
           parsfile = SF{handles.gui_number}.xmlfile;
 
-    elseif FitMethod == 3  
-        if isempty(SF{handles.gui_number}.gpufile)
-            disp('no gpu parameter file found, loading defaults');
-            SF{handles.gui_number}.gpufile = defaultGPUmFile;
+    elseif FitMethod == 3 
+        if isempty(SF{handles.gui_number}.inifile)
+            SF{handles.gui_number}.inifile = defaultIniFile; % '..\Parameters\647zcal_storm2.ini';
+             disp('no inifile found to load, using default file ');
+             disp(SF{handles.gui_number}.inifile); 
+            disp('to load a file, drag and drop it into matlab'); 
         end
-        load(SF{handles.gui_number}.gpufile);
-        parsfile = SF{handles.gui_number}.gpufile;
-        FitPars = GPUmultiPars;
-        parameters = ''; 
+            parameters = {
+                'min height=',...
+                'max height=',...
+                'default background=',...
+                'min width=',...
+                'max width=',...
+                'default width=',...
+                'axial ratio tolerance=',...
+                'Fit ROI=',...
+                'displacement=',...
+                'start frame='...
+                'allow drift=',...
+                'number of molecules in each correlation time step (XY)=',...
+                'number of molecules in each correlation time step (Z)=',...
+                'minimum time step size (frame)=',...
+                'maximum time step size (frame)=',...
+                'xy grid size (nm) in xy correlation=',...
+                'xy grid size (nm) in z correlation=',...
+                'points for moving average in generating drift correlation (XY)=',...
+                'points for moving average in generating drift correlation (Z)=',...
+                'z method=',...
+                'z calibration expression=',...
+                'z calibration outlier rejection percentile=',...
+                'z calibration start=',...
+                'z calibration end=',...
+                'z calibration step=',...
+                'ROI Valid=',...
+                'ROI_x0=',...
+                'ROI_x1=',...
+                'ROI_y0=',...
+                'ROI_y1=',...
+                };
+            % Get values from loaded inifile
+                target_values = read_parameterfile(SF{handles.gui_number}.inifile,parameters,'');
+            % save these values into global FitPars;   
+                Pfields = {'minheight','maxheight','bkd','minwidth','maxwidth',...
+                    'initwidth','maxaxratio','fitROI','displacement','startFrame','CorDrift',...
+                    'xymols','zmols','minframes','maxframes','xygridxy','xygridz',...
+                    'movAxy','movAz','Fit3D','zcaltxt','zop','zstart','zend','zstep',...
+                    'useROI','xmin','xmax','ymin','ymax'};
+
+                parsfile = SF{handles.gui_number}.inifile;
+
     end  
 
     % Get current ROI
@@ -539,14 +615,14 @@ function parfile = make_temp_parameters(handles,temp)
 global SF
 FitMethod = get(handles.FitMethod,'Value');
 if FitMethod == 1
-    parflag = '.ini';
-   parfile = scratch_parameters(SF{handles.gui_number}.inifile,temp,parflag); 
+    parflag = '.xml';
+   parfile = scratch_parameters(SF{handles.gui_number}.xmlfile,temp,parflag);    
 elseif FitMethod == 2
     parflag = '.xml';
    parfile = scratch_parameters(SF{handles.gui_number}.xmlfile,temp,parflag);
 elseif FitMethod == 3
-    parflag = '.mat';
-   parfile = scratch_parameters(SF{handles.gui_number}.gpufile,temp,parflag);
+    parflag = '.ini';
+   parfile = scratch_parameters(SF{handles.gui_number}.inifile,temp,parflag); 
 end
     
 function parfile = scratch_parameters(parfile,temp,parflag)
@@ -570,15 +646,19 @@ function FitParameters_Callback(hObject, eventdata, handles)
     [SF{handles.gui_number}.FitPars,parameters] = ReadParameterFile(FitMethod,handles); 
     parfile = make_temp_parameters(handles,'temp'); % if _temp.ini / .xml parameter files have not been made, make them.
     SF{handles.gui_number}.FitPars.OK = false;
-    if FitMethod == 1 % InsightM
-        f = GUIFitParameters(handles.gui_number);
-        waitfor(f); % need to wait until parameter selection is closed. 
-        if SF{handles.gui_number}.FitPars.OK 
-            new_values = struct2cell(SF{handles.gui_number}.FitPars)';
-            modify_script(SF{handles.gui_number}.inifile,parfile,parameters,new_values,'');   
-            SF{handles.gui_number}.inifile = parfile;
-        end
-     %   disp(inifile);
+    if FitMethod == 1
+        
+        
+
+       GUI2DParameters; 
+       % f = GUIGaussParameters(handles.gui_number);
+       % waitfor(f);
+       % if SF{handles.gui_number}.FitPars.OK
+       %     GPUmultiPars = SF{handles.gui_number}.FitPars; %#ok<NASGU>
+       %     SF{handles.gui_number}.gpufile = parfile; 
+       %     save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
+       % end    
+       
      elseif FitMethod == 2    % DaoSTORM   
         disp(['SF instanceID = ', num2str(handles.gui_number)]);
         f = GUIDaoParameters(handles.gui_number);
@@ -588,14 +668,15 @@ function FitParameters_Callback(hObject, eventdata, handles)
             modify_script(SF{handles.gui_number}.xmlfile,parfile,parameters,new_values,'<');
             SF{handles.gui_number}.xmlfile = parfile;
         end
-     elseif FitMethod == 3
-        f = GUIgpuParameters(handles.gui_number);
-        waitfor(f);
-        if SF{handles.gui_number}.FitPars.OK
-            GPUmultiPars = SF{handles.gui_number}.FitPars; %#ok<NASGU>
-            SF{handles.gui_number}.gpufile = parfile; 
-            save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
+     elseif FitMethod == 3% InsightM
+        f = GUIFitParameters(handles.gui_number);
+        waitfor(f); % need to wait until parameter selection is closed. 
+        if SF{handles.gui_number}.FitPars.OK 
+            new_values = struct2cell(SF{handles.gui_number}.FitPars)';
+            modify_script(SF{handles.gui_number}.inifile,parfile,parameters,new_values,'');   
+            SF{handles.gui_number}.inifile = parfile;
         end
+     %   disp(inifile);
     end
         set(handles.CurrentPars,'String',parfile);
 
@@ -612,18 +693,18 @@ function UpdateFitPars(handles)
     FitMethod = get(handles.FitMethod,'Value');
     [SF{handles.gui_number}.FitPars,parameters] = ReadParameterFile(FitMethod,handles); 
     parfile = make_temp_parameters(handles,'temp'); % if _temp.ini / .xml parameter files have not been made, make them.
-    if FitMethod == 1 % InsightM       
-        new_values = struct2cell(SF{handles.gui_number}.FitPars)';
-        modify_script(SF{handles.gui_number}.inifile,parfile,parameters,new_values,'');   
-        SF{handles.gui_number}.inifile = parfile;
+    if FitMethod == 1  
+        GPUmultiPars = SF{handles.gui_number}.FitPars; %#ok<NASGU>
+        SF{handles.gui_number}.gpufile = parfile; 
+        save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
     elseif FitMethod == 2    % DaoSTORM   
         new_values = struct2cell(SF{handles.gui_number}.FitPars)';
         modify_script(SF{handles.gui_number}.xmlfile,parfile,parameters,new_values,'<');
         SF{handles.gui_number}.xmlfile = parfile;
-    elseif FitMethod == 3
-        GPUmultiPars = SF{handles.gui_number}.FitPars; %#ok<NASGU>
-        SF{handles.gui_number}.gpufile = parfile; 
-        save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
+    elseif FitMethod == 3% InsightM       
+        new_values = struct2cell(SF{handles.gui_number}.FitPars)';
+        modify_script(SF{handles.gui_number}.inifile,parfile,parameters,new_values,'');   
+        SF{handles.gui_number}.inifile = parfile;
     end
         set(handles.CurrentPars,'String',parfile);
     
@@ -724,25 +805,27 @@ global SF
         'Save Parameter File',startfolder); % get file path and save name
     if hadinput > 0
         k = strfind(savename,'.');
-        if ~isempty(k);
+        if ~isempty(k)
             savename = savename(1:k-1);
         end
         % save current parameters with menufile name / directory specified above
-        if FitMethod == 1
-            savename = [savename,'.ini'];
-            modify_script(SF{handles.gui_number}.inifile,...
-                [savepath,savename],parameters,...
-                struct2cell(FitPars),'');   
+        if FitMethod == 1  
+            %Not saving parms
+            
+            %savename = [savename,'.mat'];
+            %GPUmultiPars = FitPars;  %#ok<NASGU>
+            %SF{handles.gui_number}.gpufile =[savepath,filesep,savename]; 
+            %save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
         elseif FitMethod == 2
             savename = [savename,'.xml'];
             modify_script(SF{handles.gui_number}.xmlfile,...
                 [savepath,savename],parameters,...
                 struct2cell(FitPars),'<'); 
         elseif FitMethod == 3
-            savename = [savename,'.mat'];
-            GPUmultiPars = FitPars;  %#ok<NASGU>
-            SF{handles.gui_number}.gpufile =[savepath,filesep,savename]; 
-            save(SF{handles.gui_number}.gpufile,'GPUmultiPars');
+            savename = [savename,'.ini'];
+            modify_script(SF{handles.gui_number}.inifile,...
+                [savepath,savename],parameters,...
+                struct2cell(FitPars),'');
         end
     end
     
@@ -776,18 +859,18 @@ function MenuLoadPars_Callback(hObject, eventdata, handles)
         'Select Parameter File',startfolder); % get file path and save name
     if hadinput > 0
         k = strfind(filename,'.');
-        if strcmp(filename(k:end),'.ini');
+        if strcmp(filename(k:end),'.ini')
             SF{handles.gui_number}.inifile = [filepath,filename];
             parsfile = SF{handles.gui_number}.inifile;
-            method = 1;
-        elseif strcmp(filename(k:end),'.xml');
+            method = 3;
+        elseif strcmp(filename(k:end),'.xml')
             SF{handles.gui_number}.xmlfile = [filepath,filename];
             parsfile = SF{handles.gui_number}.xmlfile;
             method = 2;
-        elseif strcmp(filename(k:end),'.mat');
-            SF{handles.gui_number}.gpufile = [filepath,filename];
-            parsfile = SF{handles.gui_number}.gpufile;
-            method = 3;
+        %elseif strcmp(filename(k:end),'.mat');
+        %    SF{handles.gui_number}.gpufile = [filepath,filename];
+        %    parsfile = SF{handles.gui_number}.gpufile;
+        %    method = 1;
         else
             disp([filename,' is not a recognized parameter file']); 
         end
@@ -814,7 +897,7 @@ global SF
  verbose = eval(SF{handles.gui_number}.defaultAopts{6});
  binname = SF{handles.gui_number}.defaultAopts{7};
  
-if FitMethod == 1
+if FitMethod == 3
     method = 'insight';
     parsfile = SF{handles.gui_number}.inifile;
 elseif FitMethod == 2
@@ -839,17 +922,17 @@ global SF
  verbose = eval(SF{handles.gui_number}.defaultAopts{6});
 FitMethod = get(handles.FitMethod,'Value');
 if FitMethod == 1
-    parsfile = SF{handles.gui_number}.inifile;
-    method = 'insight';
-    partype = '.ini';
+   % parsfile = SF{handles.gui_number}.gpufile;
+    method = '2DGauss';
+    %partype = '.mat';
 elseif FitMethod == 2
     parsfile = regexprep(SF{handles.gui_number}.xmlfile,'_1frame',''); % remove temp flag.  
     method = 'DaoSTORM';
     partype = '.xml';
 elseif FitMethod == 3
-    parsfile = SF{handles.gui_number}.gpufile;
-    method = 'GPUmultifit';
-    partype = '.mat';
+    parsfile = SF{handles.gui_number}.inifile;
+    method = 'insight';
+    partype = '.ini';
 end
 
 if isempty(parsfile)
@@ -958,13 +1041,13 @@ global SF scratchPath
 daxfile = SF{handles.gui_number}.daxfile;
 FitMethod = get(handles.FitMethod,'Value');
 if FitMethod == 1
-    parsfile = SF{handles.gui_number}.inifile;
-    method = 'insight';
+    disp('Z-fitting not available for 2DGauss multifit');
 elseif FitMethod == 2
     parsfile = SF{handles.gui_number}.xmlfile;
     method = 'DaoSTORM';
 elseif FitMethod == 3
-    disp('Z-fitting not available for GPU multifit');
+    parsfile = SF{handles.gui_number}.inifile;
+    method = 'insight';
 end
 if isempty(parsfile)
     disp('warning no parameter file selected');
@@ -1068,11 +1151,11 @@ global SF chromeWarpPars
 
 FitMethod = get(handles.FitMethod,'Value');
 if FitMethod == 1
-    method = 'insight';
+    method = '2DGauss';
 elseif FitMethod == 2
     method = 'DaoSTORM';
 elseif FitMethod == 3
-    method = 'GPUmultifit';
+    method = 'insight';
 end
 
 chromeWarpPars.OK = false; 
@@ -1190,3 +1273,11 @@ defaultAopts = inputdlg(Aprompt,dlg_title,num_lines,defaultAopts);
 if ~isempty(defaultAopts)
     SF{handles.gui_number}.defaultAopts = defaultAopts;
 end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over FitParameters.
+function FitParameters_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to FitParameters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

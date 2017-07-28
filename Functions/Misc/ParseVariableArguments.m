@@ -32,15 +32,26 @@ function parameters = ParseVariableArguments(variableArgs, defaults, mfileName)
 if nargin < 3
     mFileName = [];
 end
-
+if(length(variableArgs) == 1 && ~isstruct(variableArgs))
+    variableArgs = variableArgs{1,1};
+end
 % -------------------------------------------------------------------------
 % Validate and parse variable arguments
 % -------------------------------------------------------------------------
-if (mod(length(variableArgs), 2) ~= 0 ),
+if ((mod(length(variableArgs), 2) ~= 0) && (~isstruct(variableArgs)) )
     error(['Extra parameters must be passed in pairs to ' mfileName '.']);
 end
-parameterNames = variableArgs(1:2:end);
-parameterValues = variableArgs(2:2:end);
+
+if(isstruct(variableArgs))
+   parameterNames = fieldnames(variableArgs);
+   parameterValues = cell(1, length(parameterNames));
+   for k = 1:length(parameterNames)
+        parameterValues{1,k} = variableArgs.(parameterNames{k});
+   end
+else
+   parameterNames = variableArgs(1:2:end);
+   parameterValues = variableArgs(2:2:end);
+end
 numFlags = length(parameterNames);
 
 % -------------------------------------------------------------------------

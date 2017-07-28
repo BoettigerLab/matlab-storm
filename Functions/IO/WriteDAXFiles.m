@@ -100,7 +100,7 @@ if fid<0
     error(['Unable to open ' infoFile.localPath daxName]);
 end
 
-fwrite(fid, ipermute(int16(movie), [2 1 3]), 'int16', binaryFormat);
+fwrite(fid, ipermute(uint16(movie), [2 1 3]), 'int16', binaryFormat);
 
 if verbose
     display(['Finished writing ' infoFile.localPath daxName]);
