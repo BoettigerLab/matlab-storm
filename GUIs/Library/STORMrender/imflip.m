@@ -1,12 +1,16 @@
-
-
-% Alistair Boettiger
-% function imflip
+function Iout = imflip(Iin,dim)
+%  Iout = imflip(Iin,dim)
+% 
+% flip image along the specified dimension, dim:
+%       dim=1 for flip left-right
+%       dim=2 for flip up-down
+% image may be 2D or 3D
+% 
+% for multiple flips, stack imflip commands in the desired order
+%   imOut = imflip(imflip(imIn,1),2)
 
 % updated 04/28/11 to use single channel as well as multichannel data.
 
-
-function Iout = imflip(Iin,dim)
 
 chns = size(Iin,3);
 
@@ -22,7 +26,7 @@ else
 
     intype = class(Iin);
 Iout = zeros(size(Iin),intype);
-if dim == 1;
+if dim == 1
     I1 = fliplr(Iin(:,:,1));
     I2 = fliplr(Iin(:,:,2));
     I3 = fliplr(Iin(:,:,3));

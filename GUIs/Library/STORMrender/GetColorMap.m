@@ -102,6 +102,26 @@ catch
               whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
           end
           clrmap = [redToWhite; whiteToBlue];
+          
+     case 'BlueWhiteRed'
+          nPts = round(pts/2);
+          redToWhite = zeros(nPts,3);
+          whiteToBlue = zeros(nPts,3);
+          for n=1:nPts
+              redToWhite(n,:) = [1,n/nPts,n/nPts];
+              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
+          end
+          clrmap = flipud([redToWhite; whiteToBlue]);
+          
+      case 'RedWhiteBlueSat'
+          nPts = round(pts/2);
+          redToWhite = zeros(nPts,3);
+          whiteToBlue = zeros(nPts,3);
+          for n=1:nPts
+              redToWhite(n,:) = [1,n/nPts,n/nPts];
+              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
+          end
+          clrmap = [.9 .9 .9; redToWhite; whiteToBlue; .2 .2 .8];
 
     case 'redToWhite'
         nPts = pts;
@@ -117,7 +137,7 @@ catch
         for n=1:nPts
           redToWhite(n,:) = [1,((n-1)/(nPts-1)),((n-1)/(nPts-1))];
         end
-        redToWhite = cat(1,[.8 .8 .8],redToWhite,[.9 .9 .9]);
+        redToWhite = cat(1,[.8 .8 .8],redToWhite,[.96 .96 .96]);
         clrmap = redToWhite;   
         
     case 'redToWhite2'
@@ -130,11 +150,24 @@ catch
         
     case 'whiteToRed'
         nPts = pts;
-        whiteToRead = zeros(nPts,3);
+        whiteToRed = zeros(nPts,3);
         for n=1:nPts
-          whiteToRead(n,:) = [1,((nPts-n)/(nPts-1)),((nPts-n)/(nPts-1))];
+          whiteToRed(n,:) = [1,((nPts-n)/(nPts-1)),((nPts-n)/(nPts-1))];
         end
-        clrmap = whiteToRead;  
+        clrmap = whiteToRed;  
+        
+    
+    case 'whiteToRedSat'
+        nPts = pts;
+        whiteToRed = zeros(nPts,3);
+        for n=1:nPts
+          whiteToRed(n,:) = [1,((nPts-n)/(nPts-1)),((nPts-n)/(nPts-1))];
+        end
+        whiteToRed = cat(1,[.8 .8 .8],whiteToRed,[.96 .96 .96]);
+        clrmap = whiteToRed;
+        
+            
+  
         
     otherwise
         if parameters.verbose

@@ -1,4 +1,4 @@
-function [movie, infoFile, infoFileRoi] = ReadDax(varargin)
+function [movie, infoFile, infoFileRoi,memoryMap,memMapToFrame] = ReadDax(varargin)
 %--------------------------------------------------------------------------
 % [movie, infoFiles] = ReadDax(fileName, varargin)
 % This function loads a STORM movies from the dax file associated with the
@@ -89,7 +89,7 @@ startFrame = 1;
 endFrame = []; 
 fileName = [];
 infoFile = [];
-subregion = [];
+subregion = [0,0,0,0];
 verbose = true;
 orientation = 'normal';
 
@@ -146,6 +146,7 @@ for parameterIndex = 1:parameterCount,
     end
 end
 
+
 %--------------------------------------------------------------------------
 % Check parameter consistency
 %--------------------------------------------------------------------------
@@ -164,7 +165,7 @@ if isempty(infoFile)
     end
     
     if isempty(infoFile)
-        display('Canceled');
+        disp('Canceled');
         movie = {};
         return;
     end 
@@ -236,8 +237,8 @@ if DoThis
     
     %----------------------------------------------------------------- 
     % Read all pixels from selected frames
-    %----------------------------------------------------------------- 
-    if isempty(subregion)     
+    %-----------------------------------------------------------------
+    if sum(subregion)==0  && nargout < 3   
         fid = fopen([infoFile.localPath fileName]);
         if fid < 0
             error(['Invalid file: ' infoFile.localPath fileName]);
@@ -264,7 +265,7 @@ if DoThis
             display('Serious error somewhere here...check file for corruption');
             movie = zeros(frameDim);
         end
-    
+        infoFileRoi = infoFile; 
     %-----------------------------------------------------------------    
     % Read the Indicated SubRegion using Memory Maps 
     %-----------------------------------------------------------------
@@ -288,6 +289,9 @@ if DoThis
             ye = uint32(frameDim(2));
         end
         %------------------ arbitrary region ------------------------
+        if verbose
+            disp('creating memorymap');
+        end
         memoryMap = memmapfile([infoFile.localPath fileName], ...
                 'Format', 'uint16', ...
                 'Writable', false, ...
@@ -302,6 +306,7 @@ if DoThis
         xs = xe-xi+uint32(1);
         ys = ye-yi+uint32(1);
         movie = reshape(movie,[xs,ys,framesToLoad]);
+        memMapToFrame = @(frames) reshape(frames(inds), [xs,ys,framesToLoad]);
         if ~strcmp(orientation,'normal')
          movie = permute(reshape(movie, [xs,ys,framesToLoad]), [2 1 3]);
         end
