@@ -17,6 +17,7 @@ defaults = cell(0,3);
 defaults(end+1,:) = {'verbose', 'boolean', true}; 
 defaults(end+1,:) = {'showall', 'boolean', true}; 
 defaults(end+1,:) = {'showbox', 'boolean', false};  % plot box over seed position 
+defaults(end+1,:) = {'showNumbers','boolean',true};
 defaults(end+1,:) = {'shrk', 'positive', 1}; 
 defaults(end+1,:) = {'position', 'array', [0,0]};  % seed position
 defaults(end+1,:) = {'N', 'positive', 2000};  % max number of tiles around seed position 
@@ -190,7 +191,10 @@ numPos = size(box_coords,1);
 if parameters.showbox
     hold on;
     for n=1:numPos
-      rectangle('Position',box_coords(n,:),'EdgeColor','c');
+      rectangle('Position',box_coords(n,:),'EdgeColor','c'); 
+      if parameters.showNumbers
+         text(box_coords(n,1),box_coords(n,2),num2str(n),'color','w');
+      end
     end
 end
 

@@ -102,16 +102,7 @@ catch
               whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
           end
           clrmap = [redToWhite; whiteToBlue];
-          
-     case 'BlueWhiteRed'
-          nPts = round(pts/2);
-          redToWhite = zeros(nPts,3);
-          whiteToBlue = zeros(nPts,3);
-          for n=1:nPts
-              redToWhite(n,:) = [1,n/nPts,n/nPts];
-              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
-          end
-          clrmap = flipud([redToWhite; whiteToBlue]);
+        
           
       case 'RedWhiteBlueSat'
           nPts = round(pts/2);
@@ -123,6 +114,26 @@ catch
           end
           clrmap = [.9 .9 .9; redToWhite; whiteToBlue; .2 .2 .8];
 
+       case 'BlueWhiteRed'
+          nPts = round(pts/2);
+          redToWhite = zeros(nPts,3);
+          whiteToBlue = zeros(nPts,3);
+          for n=1:nPts
+              redToWhite(n,:) = [1,n/nPts,n/nPts];
+              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
+          end
+          clrmap = flipud([redToWhite; whiteToBlue]);
+          
+       case 'BlueWhiteRedSat'
+          nPts = round(pts/2);
+          redToWhite = zeros(nPts,3);
+          whiteToBlue = zeros(nPts,3);
+          for n=1:nPts
+              redToWhite(n,:) = [1,n/nPts,n/nPts];
+              whiteToBlue(n,:) = [(nPts-n+1)/nPts,(nPts-n+1)/nPts,1];
+          end
+          clrmap = flipud([.8 .2 .2; redToWhite; whiteToBlue; .9 .9 .9]);
+          
     case 'redToWhite'
         nPts = pts;
         redToWhite = zeros(nPts,3);

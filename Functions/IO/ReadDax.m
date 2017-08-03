@@ -60,7 +60,7 @@ function [movie, infoFile, infoFileRoi,memoryMap,memMapToFrame] = ReadDax(vararg
 % max is 1 Gb.  Warning allows user to continue, reduce frames, or abort.
 %-----------------------
 % 12/22/13: ANB
-% Added 'subregion' feature.  
+% Added 'subregion' feature.  ReadDax now uses memmaps
 % -------------------
 % ~08/01/15: ANB
 % fixed bug: data-type was hard-coded, should use what the info file

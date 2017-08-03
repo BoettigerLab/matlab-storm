@@ -1,7 +1,10 @@
 function infoFile = WriteDax(dax,varargin)
 % Writes the matrix "dax" to a .dax file
 % automatically completes necessary information in the .inf file
-% 
+%
+% defaults(end+1,:) = {'folder', 'string', scratchPath}; % 
+% defaults(end+1,:) = {'daxName', 'string', 'temp'}; % (leave off .dax)
+% defaults(end+1,:) = {'verbose', 'boolean', true}; % 
 % 
 global scratchPath
 
@@ -9,6 +12,7 @@ defaults = cell(0,3);
 defaults(end+1,:) = {'folder', 'string', scratchPath}; % 
 defaults(end+1,:) = {'daxName', 'string', 'temp'}; % (leave off .dax)
 defaults(end+1,:) = {'verbose', 'boolean', true}; % 
+defaults(end+1,:) = {'dataType','string','little endian'};
 parameters = ParseVariableArguments(varargin, defaults, mfilename);
 
 [yDim,xDim,nFrames] = size(dax); 
@@ -21,7 +25,7 @@ parameters = ParseVariableArguments(varargin, defaults, mfilename);
            infoFile.parameters_file= '';
              infoFile.shutters_file= '';
                   infoFile.CCD_mode= 'frame-transfer';
-                 infoFile.data_type= '16 bit integers (binary, big endian)';
+                 infoFile.data_type= ['16 bit integers (binary, ',parameters.dataType,')'];
           infoFile.frame_dimensions= [xDim,yDim]; %[yDim xDim];
                    infoFile.binning= [1 1];
                 infoFile.frame_size= xDim*yDim;
