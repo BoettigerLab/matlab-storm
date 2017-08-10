@@ -52,7 +52,8 @@ Wc2 = round(Wc/2);
 % Just the center of the correlation map  
 corrMmini = corrM(H-Hc2+1:H+Hc2,W-Wc2+1:W+Wc2);
 [parameters.corrPeak,indmax] =  max(corrMmini(:));
-[cy,cx] = ind2sub([Hc,Wc],indmax );
+[cy,cx] = ind2sub(size(corrMmini),indmax );
+% [cy,cx] = ind2sub([Hc,Wc],indmax ); % fixed potential rounding bug 8/4/17 
 xshift = (cx-Wc2);
 yshift = (cy-Hc2);
 

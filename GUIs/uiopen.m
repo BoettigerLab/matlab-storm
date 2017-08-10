@@ -3,10 +3,23 @@ function uiopen(type,direct)
 % file. Remember you are overloading uiopen inside toolbox/matlab/uitools
 %
 
-global myImage daxfile inffile inifile xmlfile mlist binfile stvfile loadedData
+global myImage daxfile inffile inifile xmlfile mlist binfile stvfile loadedData i4d
 warning off all
+
+%---- id4 file -----v
+if contains(type,'i4d') && (direct)
+    %-------------------------------------------------
+    % Your function that will open/run this file type
+    %-------------------------------------------------
+    disp('reading i4d file into global var "i4d"...');
+    disp(type);
+    if ~isempty(type)
+        figure();
+        i4d = ReadImage4D(type,'showPlots',true);
+    end
+
 %---- dax file -----v
-if ((~isempty(findstr(type,'.dax'))) && (direct))
+elseif ((~isempty(findstr(type,'.dax'))) && (direct))
     %-------------------------------------------------
     % Your function that will open/run this file type
     %-------------------------------------------------
