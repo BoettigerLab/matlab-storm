@@ -1,7 +1,12 @@
 function infoFile = WriteDax(dax,varargin)
+% infoFile = WriteDax(dax)
 % Writes the matrix "dax" to a .dax file
 % automatically completes necessary information in the .inf file
 %
+%% Example
+% WriteDax(dax,'folder',saveFolder,'daxName','myImage');
+% 
+%% Default Parameters
 % defaults(end+1,:) = {'folder', 'string', scratchPath}; % 
 % defaults(end+1,:) = {'daxName', 'string', 'temp'}; % (leave off .dax)
 % defaults(end+1,:) = {'verbose', 'boolean', true}; % 

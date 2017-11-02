@@ -22,6 +22,13 @@ parameters = ParseVariableArguments(varin,defaults,mfilename);
 if ~ischar(clrmapName)
     clrmap = clrmapName;
     return
+elseif strcmp(clrmapName,'default')
+    try
+        clrmap = parula(pts);
+    catch
+        clrmap = jet(pts);
+    end
+    return
 end
 
 try 
@@ -176,8 +183,18 @@ catch
         end
         whiteToRed = cat(1,[.8 .8 .8],whiteToRed,[.96 .96 .96]);
         clrmap = whiteToRed;
-        
-            
+             
+      case 'hsvB'
+          nPts = pts;
+          clrmap = hsv(round(1.2*nPts));
+          cut = round(.65*nPts);
+          clrmap = [  clrmap(cut:end,:); clrmap(1:cut-round(.2*nPts),:) ];    
+  
+        case 'hsvG'
+          nPts = pts;
+          clrmap = hsv(round(1.2*nPts));
+          cut = round(.45*nPts);
+          clrmap = [  clrmap(cut:end,:); clrmap(1:cut-round(.2*nPts),:) ];    
   
         
     otherwise

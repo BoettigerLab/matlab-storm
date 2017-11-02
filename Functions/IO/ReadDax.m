@@ -65,87 +65,59 @@ function [movie, infoFile, infoFileRoi,memoryMap,memMapToFrame] = ReadDax(vararg
 % ~08/01/15: ANB
 % fixed bug: data-type was hard-coded, should use what the info file
 % specifies. 
+% ---------------------
+% 09/20/17: ANB
+% converted to modern default parameter parsing
+% 
 %--------------------------------------------------------------------------
-
-%--------------------------------------------------------------------------
-% Hardcoded Variables
-%--------------------------------------------------------------------------
-quiet = 0;
-orientationValues = {'normal','nd2'};
-flags = {'file', 'infoFile', 'startFrame','endFrame', 'verbose', ...
-    'orientation', 'path','allFrames'};
 
 %--------------------------------------------------------------------------
 % Global Variables
 %--------------------------------------------------------------------------
 global defaultDataPath;
 
-%--------------------------------------------------------------------------
-% Default Variables
-%--------------------------------------------------------------------------
-dataPath = defaultDataPath;
-allFrames = [];
-startFrame = 1;
-endFrame = []; 
-fileName = [];
-infoFile = [];
-subregion = [0,0,0,0];
-verbose = true;
-orientation = 'normal';
-
-maxMemory = 10E9; % 1 Gb
-
 
 %--------------------------------------------------------------------------
 % Parse Required Input
 %--------------------------------------------------------------------------
-if nargin >= 1
-    if isstruct(varargin{1})
-        infoFile = varargin{1};
-        varargin = varargin(2:end);
-    elseif ~ismember(varargin{1}, flags)
-        fileName =varargin{1};
-        varargin = varargin(2:end);
-    end
+
+if isstruct(varargin{1})
+    infoFile = varargin{1};
+    fileName = [];
+else
+    infoFile = [];
+    fileName = varargin{1};
 end
+varin = varargin(2:end);
 
 %--------------------------------------------------------------------------
-% Parse Variable Input
+% Parse Optional Variables
 %--------------------------------------------------------------------------
-if (mod(length(varargin), 2) ~= 0 ),
-    error(['Extra Parameters passed to the function ''' mfilename ''' must be passed in pairs.']);
-end
-parameterCount = length(varargin)/2;
 
-for parameterIndex = 1:parameterCount,
-    parameterName = varargin{parameterIndex*2 - 1};
-    parameterValue = varargin{parameterIndex*2};
-    switch parameterName
-        case 'file'
-            fileName = CheckParameter(parameterValue, 'string', 'file');
-        case 'allFrames'
-             allFrames = CheckParameter(parameterValue, 'boolean', 'allFrames');
-        case 'startFrame'
-            startFrame = CheckParameter(parameterValue, 'positive', 'startFrame');
-        case 'endFrame'
-            endFrame = CheckParameter(parameterValue, 'positive', 'endFrame');
-        case 'subregion'
-            subregion = CheckParameter(parameterValue,'array','subregion'); 
-        case 'infoFile'
-            infoFile = CheckParameter(parameterValue, 'struct', 'infoFile');
-        case 'maxMemory'
-            maxMemory = CheckParameter(parameterValue, 'positive', 'maxMemory');
-        case 'verbose'
-            verbose = CheckParameter(parameterValue, 'boolean', 'verbose');
-        case 'orientation'
-            orientation = CheckList(parameterValue, orientationValues, 'orientation');
-        case 'path'
-            dataPath = CheckParameter(parameterValue, 'string', 'path');
-        otherwise
-            error(['The parameter ''' parameterName ''' is not recognized by the function ''' mfilename '''.']);
-    end
-end
 
+defaults = cell(0,3);
+defaults(end+1,:) = {'fileName','string',fileName};
+defaults(end+1,:) = {'startFrame','freeType',1};
+defaults(end+1,:) = {'endFrame','freeType',[]};
+defaults(end+1,:) = {'subregion','array',[0,0,0,0]};
+defaults(end+1,:) = {'allFrames','boolean',[]};
+defaults(end+1,:) = {'infoFile','struct',infoFile};
+defaults(end+1,:) = {'maxMemory','positive',10E9};
+defaults(end+1,:) = {'verbose','boolean',true};
+defaults(end+1,:) = {'orientation',{'normal','nd2'},'normal'};
+defaults(end+1,:) = {'dataPath','string',defaultDataPath};
+
+pars = ParseVariableArguments(varin,defaults,mfilename);
+fileName = pars.fileName;
+startFrame = pars.startFrame;
+endFrame = pars.endFrame;
+subregion = pars.subregion;
+allFrames = pars.allFrames;
+infoFile = pars.infoFile;
+maxMemory = pars.maxMemory;
+verbose = pars.verbose;
+orientation = pars.orientation;
+dataPath = pars.dataPath;
 
 %--------------------------------------------------------------------------
 % Check parameter consistency
@@ -192,7 +164,7 @@ end
 if isempty(endFrame)
     endFrame = framesInDax;
 end
-if endFrame > framesInDax;
+if endFrame > framesInDax
     if verbose
         warning('input endFrame greater than total frames in dax_file.  Using all available frames after startFrame');
     end
@@ -226,10 +198,10 @@ end
 if DoThis
     fileName = [infoFile.localName(1:(end-4)) '.dax'];
     if verbose
-        display(['Loading ' infoFile.localPath fileName ]);
+        disp(['Loading ' infoFile.localPath fileName ]);
     end
 
-    if ~isempty( strfind(infoFile.data_type,'little endian') );
+    if ~isempty( strfind(infoFile.data_type,'little endian') )
         binaryFormat = 'l';
     else
         binaryFormat = 'b';
@@ -262,7 +234,7 @@ if DoThis
                 end
             end
         catch
-            display('Serious error somewhere here...check file for corruption');
+            disp('Serious error somewhere here...check file for corruption');
             movie = zeros(frameDim);
         end
         infoFileRoi = infoFile; 
@@ -320,8 +292,8 @@ if DoThis
     
 
     if verbose
-        display(['Loaded ' infoFile.localPath fileName ]);
-        display([num2str(framesToLoad) ' ' num2str(frameDim(1)) ' x ' num2str(frameDim(2)) ...
+        disp(['Loaded ' infoFile.localPath fileName ]);
+        disp([num2str(framesToLoad) ' ' num2str(frameDim(1)) ' x ' num2str(frameDim(2)) ...
             ' frames loaded']);
     end
 else

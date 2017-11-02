@@ -24,10 +24,6 @@ function WriteDAXFiles(movie, infoFile, varargin)
 % Version 1.0
 %--------------------------------------------------------------------------
 
-%--------------------------------------------------------------------------
-% Hardcoded Variables
-%--------------------------------------------------------------------------
-quiet = false;
 
 %--------------------------------------------------------------------------
 % Global Variables
@@ -49,12 +45,12 @@ end
 %--------------------------------------------------------------------------
 % Parse Variable Input
 %--------------------------------------------------------------------------
-if (mod(length(varargin), 2) ~= 0 ),
+if (mod(length(varargin), 2) ~= 0 )
     error(['Extra Parameters passed to the function ''' mfilename ''' must be passed in pairs.']);
 end
 parameterCount = length(varargin)/2;
 
-for parameterIndex = 1:parameterCount,
+for parameterIndex = 1:parameterCount
     parameterName = varargin{parameterIndex*2 - 1};
     parameterValue = varargin{parameterIndex*2};
     switch parameterName
@@ -70,7 +66,7 @@ end
 %--------------------------------------------------------------------------
 % Write .ini files
 %--------------------------------------------------------------------------
-WriteInfoFiles(infoFile, 'verbose', verbose);
+WriteInfoFiles(infoFile, 'verbose', false);
     
 %--------------------------------------------------------------------------
 % Create dax name
@@ -89,7 +85,7 @@ end
 %--------------------------------------------------------------------------
 % Write DAX file
 %--------------------------------------------------------------------------
- if ~isempty( strfind(infoFile.data_type,'little endian') );
+if ~isempty( strfind(infoFile.data_type,'little endian') )
     binaryFormat = 'l';
 else
     binaryFormat = 'b';
@@ -100,10 +96,10 @@ if fid<0
     error(['Unable to open ' infoFile.localPath daxName]);
 end
 
-fwrite(fid, ipermute(uint16(movie), [2 1 3]), 'int16', binaryFormat);
+fwrite(fid, ipermute(uint16(movie), [2 1 3]), 'uint16', binaryFormat);
 
 if verbose
-    display(['Finished writing ' infoFile.localPath daxName]);
+    disp(['Finished writing ' infoFile.localPath daxName]);
 end
 
 fclose(fid);
