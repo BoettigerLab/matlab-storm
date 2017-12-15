@@ -4,6 +4,9 @@ function clrmap = GetColorMap(clrmapName,varargin)
 % GetColorMap('redToWhite',10);
 %
 
+global matlabFunctionsPath
+
+
 % defaults
 defaults = cell(0,3);
 defaults(end+1,:) = {'verbose','boolean',true};
@@ -100,6 +103,19 @@ catch
         end
         clrmap = ([blackToCyan; (CyanToOrange)]);
         
+      case 'PurpleWhiteYellow'  
+          nPts = round(pts/2);
+          purpleToWhite = zeros(nPts,3);
+          whiteToYellow = zeros(nPts,3);
+          grayMap = zeros(nPts,3);
+          for n=1:nPts
+              purpleToWhite(n,:) = [1,n/nPts,1];
+              whiteToYellow(n,:) = [1,1,(nPts-n+1)/nPts];
+              grayMap(n,:) = [n/nPts,n/nPts,n/nPts];
+          end
+          clrmap = [purpleToWhite*(2/3)+grayMap*(1/3); whiteToYellow*(7/8)+flipud(grayMap)*(1/8)];
+          clrmap(clrmap>1) = 1;
+          
       case 'RedWhiteBlue'
           nPts = round(pts/2);
           redToWhite = zeros(nPts,3);
@@ -184,19 +200,26 @@ catch
         whiteToRed = cat(1,[.8 .8 .8],whiteToRed,[.96 .96 .96]);
         clrmap = whiteToRed;
              
-      case 'hsvB'
+    case 'hsvB'
           nPts = pts;
           clrmap = hsv(round(1.2*nPts));
           cut = round(.65*nPts);
           clrmap = [  clrmap(cut:end,:); clrmap(1:cut-round(.2*nPts),:) ];    
   
-        case 'hsvG'
+    case 'hsvG'
           nPts = pts;
           clrmap = hsv(round(1.2*nPts));
           cut = round(.45*nPts);
           clrmap = [  clrmap(cut:end,:); clrmap(1:cut-round(.2*nPts),:) ];    
   
-        
+    case 'viridis'
+          vir = readtable([matlabFunctionsPath,'Misc\','viridis_rgb_256.txt']);
+          clrmap = vir{:,1:3}./256;
+          
+    case 'viridisFlip'
+          vir = readtable([matlabFunctionsPath,'Misc\','viridis_rgb_256.txt']);
+          clrmap = flipud(vir{:,1:3}./256);
+          
     otherwise
         if parameters.verbose
             warning(['colormap ',clrmapName,' not recognized']);

@@ -33,8 +33,12 @@ parameters = ParseVariableArguments(varargin, defaults, mfilename);
 
 
 if parameters.subregion && parameters.region < H
-    hs = round(H/2)-parameters.region/2+1:round(H/2)+parameters.region/2;
-    ws = round(W/2)-parameters.region/2+1:round(W/2)+parameters.region/2;
+    h1 = max(1,round(H/2)-parameters.region/2+1);
+    h2 = min(H,round(H/2)+parameters.region/2);
+    hs = h1:h2;
+    w1 = max(1,round(W/2)-parameters.region/2+1); 
+    w2 = min(W,round(W/2)+parameters.region/2);
+    ws = w1:w2;
     Im1 = Im1(hs,ws);
     Im2 = Im2(hs,ws);
 end

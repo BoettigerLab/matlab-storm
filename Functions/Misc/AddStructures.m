@@ -11,6 +11,7 @@ function structOut = AddStructures(struct1,struct2,varargin)
 % mlist.x is 20x1 and mlist.y is 20x1 combining the values of mlist 1 and
 % mlist 2. 
 
+% Added pad.  If second array is smaller, pad missing data with NaN
 
 % -------------------------------------------------------------------------
 % Default variables
@@ -18,6 +19,7 @@ function structOut = AddStructures(struct1,struct2,varargin)
 defaults = cell(0,3);
 defaults(end+1,:) = {'verbose', 'boolean',true};
 defaults(end+1,:) = {'catdim', 'positive',1};
+defaults(end+1,:) = {'pad', 'boolean',false};  % needs testing
 
 % -------------------------------------------------------------------------
 
@@ -40,13 +42,25 @@ parameters = ParseVariableArguments(varargin, defaults, mfilename);
 %-------------------------------------------------------------------------   
 
 
-for f=fieldnames(struct1)';
+for f=fieldnames(struct1)'
     try
         structOut.(f{1})=cat(parameters.catdim,struct1.(f{1}),struct2.(f{1}));
     catch
         if parameters.verbose
            disp(['field ',f{1},' could not be concatinated']);  
         end
-        structOut.(f{1})={struct1.(f{1}),struct2.(f{1})};
+        if parameters.pad
+            try
+                [h1,w1,d1] = size(struct1.(f{1}));
+                [h2,w2,d2] = size(struct2.(f{1}));
+                s2 = padarray( struct2.(f{1}), [h1-h2,w1-w2,d1-d2],nan,'post');
+                structOut.(f{1})=cat(parameters.catdim,struct1.(f{1}),s2);
+            catch
+                structOut.(f{1})={struct1.(f{1}),struct2.(f{1})};    
+            end
+        else
+            structOut.(f{1})={struct1.(f{1}),struct2.(f{1})};
+        end
     end
 end
+
